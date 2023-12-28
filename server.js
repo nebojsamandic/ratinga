@@ -507,5 +507,9 @@ app.listen(port, () => {
 
 
 
-
+connectDB().then(() => { 
+app.listen(PORT, () => {
+consol.log('listen on port ${PORT}');
+})
+});
 

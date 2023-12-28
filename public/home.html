@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Employee Rating App</title>
+  <style>
+    .collapsible {
+      background-color: purple;
+      color: white;
+      cursor: pointer;
+      padding: 10px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    .content {
+      display: none;
+      padding: 0 18px;
+      overflow: hidden;
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Employee Rating App</h1>
+
+  <!-- Collapsible for "Quality Check Inspection" -->
+  <button class="collapsible" onclick="toggleCollapsible('qualityCheckCollapsible')">Quality Check Inspection</button>
+  <div id="qualityCheckCollapsible" class="content">
+    <form action="/submit" method="post" onsubmit="event.preventDefault(); submitRating();">
+      <label for="employeeName">Employee Name:</label>
+      <select id="employeeName" name="employeeName" required></select>
+
+      <label for="appearanceRating">Appearance Rating:</label>
+      <input type="number" id="appearanceRating" name="appearanceRating" min="1" max="10" required>
+
+      <label for="packingRating">Packing Rating:</label>
+      <input type="number" id="packingRating" name="packingRating" min="1" max="10" required>
+
+      <label for="truckRating">Truck Rating:</label>
+      <input type="number" id="truckRating" name="truckRating" min="1" max="10" required>
+
+      <label for="comments">Comments:</label>
+      <textarea id="comments" name="comments" rows="4" cols="50"></textarea>
+
+      <button type="submit">Submit Rating</button>
+      <div id="successMessage"></div>
+
+    </form>
+  </div>
+
+ <!-- Collapsible for "Search Quality Control" -->
+<button class="collapsible" onclick="toggleCollapsible('searchQualityControlCollapsible')">Search Quality Control</button>
+<div id="searchQualityControlCollapsible" class="content">
+  <label for="selectedUser">Select User:</label>
+  <select id="selectedUser" name="selectedUser" required></select>
+
+  <label for="selectedMonth">Select Month:</label>
+  <input type="month" id="selectedMonth" name="selectedMonth" required>
+
+  <button id="viewRatingsBtn" onclick="viewRatings()" disabled>View Ratings</button>
+ 
+    
+    <div id="ratingsContainer">
+      <div class="rating-row header">
+        <div class="column">Date</div>
+        <div class="column">Name</div>
+        <div class="column">Comments</div>
+        <div class="column">Appearance</div>
+        <div class="column">Packing</div>
+        <div class="column">Truck</div>
+      </div>
+      <div id="ratingsSummary">
+        <p>Total Ratings: <span id="totalRatings">0</span></p>
+        <p>Average Rating: <span id="averageRating">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="redirectToIndex()">Return to HomePage</button>
+
+  <script>
+    function toggleCollapsible(collapsibleId) {
+      var collapsible = document.getElementById(collapsibleId);
+      collapsible.style.display = (collapsible.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function redirectToIndex() {
+      // Replace 'index.html' with the actual URL of your index page
+      window.location.href = 'index.html';
+    }
+  </script>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const submitDropdown = document.getElementById('employeeName');
+  const viewDropdown = document.getElementById('selectedUser');
+
+  // Function to add options to a dropdown
+  function populateDropdown(dropdown, options) {
+    dropdown.innerHTML = ''; // Clear existing options
+
+    // Add a default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.text = 'Select User';
+    dropdown.add(defaultOption.cloneNode(true));
+
+    // Add options to the dropdown
+    options.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      dropdown.add(option.cloneNode(true));
+    });
+  }
+
+  // Fetch usernames
+  fetch('/usernames')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(employeeNames => {
+      // Populate both dropdowns with fetched data
+      populateDropdown(submitDropdown, employeeNames);
+      populateDropdown(viewDropdown, employeeNames);
+
+      // Enable the "View Ratings" button
+      document.getElementById('viewRatingsBtn').disabled = false;
+    })
+    .catch(error => {
+      console.error('Error fetching employee names:', error);
+    });
+});
+
+
+
+    function submitRating() {
+      const employeeName = document.getElementById('employeeName').value;
+      const appearanceRating = document.getElementById('appearanceRating').value;
+      const packingRating = document.getElementById('packingRating').value;
+      const truckRating = document.getElementById('truckRating').value;
+      const comments = document.getElementById('comments').value;
+
+      console.log('Form Data:', { employeeName, appearanceRating, packingRating, truckRating, comments });
+
+      fetch('/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `employeeName=${encodeURIComponent(employeeName)}&appearanceRating=${encodeURIComponent(
+          appearanceRating
+        )}&packingRating=${encodeURIComponent(packingRating)}&truckRating=${encodeURIComponent(
+          truckRating
+        )}&comments=${encodeURIComponent(comments)}`,
+      })
+        .then(response => response.text())
+        .then(message => {
+          document.getElementById('successMessage').innerText = message;
+          clearForm();
+          setTimeout(() => {
+            document.getElementById('successMessage').innerText = '';
+          }, 3000);
+        })
+        .catch(error => console.error('Error submitting rating:', error));
+    }
+
+    function viewRatings() {
+  const selectedUser = document.getElementById('selectedUser').value;
+  const selectedMonth = document.getElementById('selectedMonth').value;
+
+  if (selectedUser && selectedMonth) {
+    console.log('Selected User:', selectedUser);
+    console.log('Selected Month:', selectedMonth);
+
+    fetch(`/ratings?employeeName=${encodeURIComponent(selectedUser)}&month=${selectedMonth}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetched data:', data);
+
+        const ratingsContainer = document.getElementById('ratingsContainer');
+        ratingsContainer.innerHTML = ''; // Clear existing content
+
+        // Add header row
+        const headerRow = document.createElement('div');
+        headerRow.className = 'rating-row header';
+
+        const headerColumns = ['Date', 'Name', 'Comments', 'Appearance', 'Packing', 'Truck'];
+        headerColumns.forEach(columnText => {
+          const headerColumn = document.createElement('div');
+          headerColumn.className = 'column';
+          headerColumn.innerText = columnText;
+          headerRow.appendChild(headerColumn);
+        });
+
+        ratingsContainer.appendChild(headerRow);
+
+        // Create rows for each rating entry
+        let totalVisits = 0;
+        let totalAppearance = 0;
+        let totalPacking = 0;
+        let totalTruck = 0;
+
+        data.forEach(entry => {
+          const row = document.createElement('div');
+          row.className = 'rating-row';
+
+          const dateCol = document.createElement('div');
+          dateCol.className = 'column';
+          dateCol.innerText = new Date(entry.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+
+          const nameCol = document.createElement('div');
+          nameCol.className = 'column';
+          nameCol.innerText = entry.employeeName;
+
+          const commentCol = document.createElement('div');
+          commentCol.className = 'column';
+          commentCol.innerText = entry.comments;
+
+          const appearanceCol = document.createElement('div');
+          appearanceCol.className = 'column';
+          appearanceCol.innerText = entry.appearanceRating;
+          totalAppearance += entry.appearanceRating;
+
+          const packingCol = document.createElement('div');
+          packingCol.className = 'column';
+          packingCol.innerText = entry.packingRating;
+          totalPacking += entry.packingRating;
+
+          const truckCol = document.createElement('div');
+          truckCol.className = 'column';
+          truckCol.innerText = entry.truckRating;
+          totalTruck += entry.truckRating;
+
+          row.appendChild(dateCol);
+          row.appendChild(nameCol);
+          row.appendChild(commentCol);
+          row.appendChild(appearanceCol);
+          row.appendChild(packingCol);
+          row.appendChild(truckCol);
+
+          ratingsContainer.appendChild(row);
+
+          totalVisits++;
+        });
+
+        // Calculate averages
+        const averageAppearance = totalAppearance / totalVisits;
+        const averagePacking = totalPacking / totalVisits;
+        const averageTruck = totalTruck / totalVisits;
+        const totalAverage = (averageAppearance + averagePacking + averageTruck) / 3;
+
+        // Add total and average rows
+        const totalRow = document.createElement('div');
+        totalRow.className = 'rating-row';
+
+        const totalDateCol = document.createElement('div');
+        totalDateCol.className = 'column';
+        totalDateCol.innerText = 'Total Visits: ' + totalVisits;
+
+        const totalAppearanceCol = document.createElement('div');
+        totalAppearanceCol.className = 'column';
+        totalAppearanceCol.innerText = 'Average: ' + averageAppearance.toFixed(2);
+
+        const totalRowSpace = document.createElement('div');
+        totalRowSpace.className = 'column';
+        totalRowSpace.innerText = ' ';
+
+        const totalRowSpace2 = document.createElement('div');
+        totalRowSpace2.className = 'column';
+        totalRowSpace2.innerText = ' ';
+
+        const totalPackingCol = document.createElement('div');
+        totalPackingCol.className = 'column';
+        totalPackingCol.innerText = 'Average: ' + averagePacking.toFixed(2);
+
+        const totalTruckCol = document.createElement('div');
+        totalTruckCol.className = 'column';
+        totalTruckCol.innerText = 'Average: ' + averageTruck.toFixed(2);
+
+        totalRow.appendChild(totalDateCol);
+        totalRow.appendChild(totalRowSpace); // Empty column for Name
+        totalRow.appendChild(totalRowSpace2); // Empty column for Comments
+        totalRow.appendChild(totalAppearanceCol);
+        totalRow.appendChild(totalPackingCol);
+        totalRow.appendChild(totalTruckCol);
+
+        ratingsContainer.appendChild(totalRow);
+
+        const totalAverageRow = document.createElement('div');
+        totalAverageRow.id = 'totalAverageRow';
+        totalAverageRow.className = 'rating-row';
+
+        const totalAverageCol = document.createElement('div');
+        totalAverageCol.className = 'column';
+        totalAverageCol.innerText = 'TOTAL AVERAGE FOR ALL: ' + totalAverage.toFixed(2);
+
+        totalAverageRow.appendChild(totalAverageCol);
+
+        ratingsContainer.appendChild(totalAverageRow);
+      })
+      .catch(error => console.error('Error fetching ratings:', error));
+  } else {
+    alert('Please select a user and a month before viewing ratings.');
+  }
+}
+
+  </script>
+</body>
+</html>

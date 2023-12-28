@@ -1,0 +1,73 @@
+<!-- home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Page</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Additional styles for home.html */
+    button {
+      background-color: #800080; /* Purple color */
+      color: white;
+      padding: 15px 20px; /* Increased padding */
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block; /* Make buttons block-level elements */
+      margin-bottom: 10px; /* Add margin between buttons */
+      width: 100%; /* Make buttons take 100% width */
+      box-sizing: border-box; /* Include padding in the width */
+      opacity: 0; /* Initial opacity for fade-in effect */
+      transition: opacity 0.5s ease-in-out; /* Transition for opacity property */
+    }
+
+    /* CSS for fade-in effect */
+    body.fade-in button {
+      opacity: 1 !important; /* Use !important to override inline style */
+      transition: opacity 0.5s ease-in-out; /* Adjusted transition duration */
+    }
+
+    /* CSS for fade-out effect */
+    body.fade-out {
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out; /* Adjusted transition duration */
+    }
+  </style>
+</head>
+<body>
+  <h1>Perfect Moving And Storage LLC</h1>
+
+  <!-- Button to navigate to claims.html -->
+  <button onclick="navigateTo('claims.html')">Go to Claims Page</button>
+
+  <!-- Button to navigate to index.html -->
+  <button onclick="navigateTo('home.html')">Go to QC Page</button>
+
+  <!-- Button to navigate to registry.html -->
+  <button onclick="navigateTo('registry.html')">Go to Registry Page</button>
+
+  <!-- Button to navigate to registry.html -->
+  <button onclick="navigateTo('accident.html')">Go to Accident Page</button>
+
+  <!-- Button to navigate to cashpayment.html -->
+  <button onclick="navigateTo('cashpayment.html')">Go to Cash Payment Page</button>
+
+  <script>
+    // Function to navigate to a specified page with fade-out effect
+    function navigateTo(page) {
+      document.body.classList.add('fade-out');
+      setTimeout(function() {
+        window.location.href = page;
+      }, 500); // Adjust the timeout to match the transition duration
+    }
+
+    // Function to add fade-in class on page load
+    window.addEventListener('load', function() {
+      document.body.classList.add('fade-in');
+      // Removed the unnecessary timeout for page load
+    });
+  </script>
+</body>
+</html>

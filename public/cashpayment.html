@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Cash Payment Page</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 16px Arial;
+            margin: 20px;
+        }
+
+        .collapsible {
+            background-color: purple;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            margin-bottom: 15px; /* Increased margin for better separation */
+        }
+
+        .content {
+            display: none;
+            padding: 0 18px;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+
+        .datepicker-container {
+            margin-bottom: 15px; /* Increased margin for better separation */
+        }
+
+        .datepicker-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .datepicker-container input {
+            padding: 5px; /* Adjust the padding to make it smaller */
+            width: 15%;   /* Adjust the width percentage */
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .back-button, .add-button {
+            margin-top: 15px; /* Increased margin for better separation */
+            padding: 10px;
+            background-color: purple;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .back-button:hover, .add-button:hover {
+            background-color: #330066;
+        }
+
+        .table-container {
+            margin-top: 15px; /* Increased margin for better separation */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px; /* Increased margin for better separation */
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: purple;
+            color: white;
+        }
+
+        .add-button-container {
+            margin-top: 15px; /* Increased margin for better separation */
+        }
+        #statisticsTable {
+        width: 100%;
+    }
+
+    #statisticsTable th {
+        background-color: purple;
+        color: white;
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #ddd;
+    }
+
+    #statisticsTable td {
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #ddd;
+    }
+    </style>
+</head>
+<body>
+  <!-- Collapsible for "Cash Payments" -->
+  <button class="collapsible" onclick="toggleCollapsible('cashPaymentsCollapsible')">Cash Payments</button>
+  <div id="cashPaymentsCollapsible" class="content">
+      <!-- Datepicker for selecting a month -->
+      <div class="datepicker-container">
+          <label for="monthPicker">Select a Month:</label>
+          <input type="month" id="monthPicker" name="monthPicker">
+          <!-- Search button to trigger the search -->
+          <button onclick="fetchCashPayments()">Search</button>
+      </div>
+
+     <!-- Table for displaying cash payments -->
+     <div class="table-container">
+        <table id="cashPaymentsTable">
+            <thead>
+                <tr>
+                    <th>Job Id</th>
+                    <th>Cash Amount</th>
+                    <th>Driver</th>
+                    <th>Date</th>
+                    <th>Received</th>
+                </tr>
+            </thead>
+            <tbody id="cashPaymentsTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <table id="statisticsTable">
+            <thead>
+                <tr>
+                    <th>Total Jobs</th>
+                    <th>Total Cash</th>
+                    <th>Total Done</th>
+                </tr>
+            </thead>
+            <tbody id="statisticsTableBody"></tbody>
+        </table>
+    </div>
+    </div>
+</div>
+
+
+
+    <!-- Collapsible for "Add Job Details" -->
+    <button class="collapsible" onclick="toggleCollapsible('addJobDetailsCollapsible')">Add Job Details</button>
+    <div id="addJobDetailsCollapsible" class="content">
+        <!-- Tables for adding job details -->
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>Job Id</th>
+                    <td><input type="text" id="jobId" name="jobId"></td>
+                </tr>
+                <tr>
+                    <th>Cash Amount</th>
+                    <td><input type="text" id="cashAmount" name="cashAmount"></td>
+                </tr>
+                <tr>
+                    <th>Driver</th>
+                    <td><select id="driver" name="driver"></select></td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td><input type="date" id="jobDate" name="jobDate"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Button to add cash payment -->
+        <div class="add-button-container">
+            <button class="add-button" onclick="addCashPayment()">Add Cash Payment</button>
+        </div>
+    </div>
+    
+        <!-- Button to return to the homepage -->
+        <button class="back-button" onclick="returnToHomepage()">Back to Homepage</button>
+
+    <script>
+        
+        function toggleCollapsible(collapsibleId) {
+        var collapsibleContent = document.getElementById(collapsibleId);
+        if (collapsibleContent) {
+            collapsibleContent.style.display = (collapsibleContent.style.display === 'block') ? 'none' : 'block';
+        }
+    }
+    
+        // Function to return to the homepage
+        function returnToHomepage() {
+            // Assuming your homepage is at the root URL
+            window.location.href = '/';
+        }
+
+     // Function to fetch users from the server
+async function fetchUsers() {
+  try {
+    const response = await fetch('/usernames');
+    const users = await response.json();
+
+    const driverDropdown = document.getElementById('driver');
+    driverDropdown.innerHTML = ''; // Clear previous options
+
+    users.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user;
+      option.text = user;
+      driverDropdown.add(option);
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
+        // Call fetchUsers when the page loads
+        document.addEventListener('DOMContentLoaded', fetchUsers);
+
+// Function to add cash payment
+async function addCashPayment() {
+  const jobIdInput = document.getElementById('jobId');
+  const cashAmountInput = document.getElementById('cashAmount');
+  const driverInput = document.getElementById('driver');
+  const jobDateInput = document.getElementById('jobDate');
+
+  const jobId = jobIdInput.value;
+  const cashAmount = cashAmountInput.value;
+  const driver = driverInput.value;
+  const jobDate = jobDateInput.value;
+
+  try {
+    const response = await fetch('/addCashPayment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ jobId, cashAmount, driver, date: jobDate }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log('Cash payment added successfully:', data.message);
+
+      // Clear input fields after successful addition
+      jobIdInput.value = '';
+      cashAmountInput.value = '';
+      driverInput.value = '';
+      jobDateInput.value = '';
+
+      // Fetch cash payments and update both tables
+      fetchCashPayments();
+    } else {
+      console.error('Error adding cash payment:', data.message);
+    }
+  } catch (error) {
+    console.error('Error adding cash payment:', error);
+  }
+}
+
+
+
+    // ... (existing JavaScript code) ...
+
+    function calculateTotalCash(cashPayments) {
+        // Sum up all Cash Amounts for the selected month
+        return cashPayments.reduce((total, payment) => total + parseFloat(payment.cashAmount), 0).toFixed(2);
+    }
+
+    function countReceivedCashPayments(cashPayments) {
+        // Count the number of received cash payments
+        return cashPayments.reduce((count, payment) => count + (payment.received ? 1 : 0), 0);
+    }
+
+// Function to fetch cash payments from the server based on the selected month
+async function fetchCashPayments() {
+        const monthPicker = document.getElementById('monthPicker');
+        const selectedMonth = monthPicker.value;
+
+        if (!selectedMonth) {
+            console.error('Please select a month.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/cashPayments?month=${selectedMonth}`);
+            const cashPayments = await response.json();
+
+            console.log('Fetched cash payments:', cashPayments);
+
+            // Update the logic to display cash payments in your table
+            const cashPaymentsTable = document.getElementById('cashPaymentsTable');
+            const cashPaymentsTbody = cashPaymentsTable.getElementsByTagName('tbody')[0];
+            cashPaymentsTbody.innerHTML = ''; // Clear previous rows
+
+            // New table for statistics
+            const statisticsTable = document.getElementById('statisticsTable');
+            const statisticsTbody = statisticsTable.getElementsByTagName('tbody')[0];
+            statisticsTbody.innerHTML = ''; // Clear previous rows
+
+            cashPayments.forEach(cashPayment => {
+                // Add a row for each cash payment in the cashPaymentsTable
+                const cashPaymentRow = cashPaymentsTbody.insertRow();
+                const cells = ['jobId', 'cashAmount', 'driver', 'date'];
+
+                cells.forEach(cell => {
+                    const cellElement = cashPaymentRow.insertCell();
+                    cellElement.textContent = cashPayment[cell];
+                });
+
+                // Add an additional cell for "Received" with a checkbox
+                const receivedCell = cashPaymentRow.insertCell();
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `receivedCheckbox_${cashPayment._id}`;
+                checkbox.checked = cashPayment.received || false;
+                checkbox.addEventListener('change', function () {
+                    console.log(`Checkbox clicked for cash payment with ID: ${cashPayment._id}`);
+                    updateReceivedStatus(cashPayment._id, this.checked);
+                });
+                receivedCell.appendChild(checkbox);
+            });
+            async function updateReceivedStatus(cashPaymentId, received) {
+  try {
+    const response = await fetch('/updateCashPaymentReceivedStatus', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cashPaymentId, received }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log('Received status updated successfully:', data.message);
+    } else {
+      console.error('Error updating received status:', data.message);
+    }
+  } catch (error) {
+    console.error('Error updating received status:', error);
+  }
+}
+// New row for statistics table
+const statisticsRow = statisticsTbody.insertRow();
+            const totalJobsCell = statisticsRow.insertCell();
+            totalJobsCell.textContent = `Total Jobs: ${cashPayments.length}`;
+
+            const totalCashCell = statisticsRow.insertCell();
+            totalCashCell.textContent = `Total Cash: $${calculateTotalCash(cashPayments)}`;
+
+            const totalDoneCell = statisticsRow.insertCell();
+            const totalDoneCount = countReceivedCashPayments(cashPayments);
+            totalDoneCell.textContent = `Total Done: ${totalDoneCount}/${cashPayments.length}`;
+        } catch (error) {
+            console.error('Error fetching cash payments:', error);
+        }
+    }
+    // Call fetchCashPayments when the page loads
+    document.addEventListener('DOMContentLoaded', fetchCashPayments);
+
+  // Event listener for collapsible sections
+  document.addEventListener('click', function (event) {
+        var target = event.target;
+
+        // Check if the clicked element is a collapsible button
+        if (target.classList.contains('collapsible')) {
+            var collapsibleId = target.getAttribute('data-collapsible-id');
+            toggleCollapsible(collapsibleId);
+        }
+    });
+
+    </script>
+</body>
+</html>

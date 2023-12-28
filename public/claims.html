@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Claims Page</title>
+<!-- Add your custom styles for collapsibles here -->
+<style>
+ /* Existing styles for collapsibles */
+ .collapsible {
+    background-color: purple;
+    color: white;
+    cursor: pointer;
+    padding: 20px; /* Reduced padding */
+    width: 100%;
+    text-align: left;
+    border: none;
+    outline: none;
+    font-size: 14px; /* Reduced font size */
+    transition: background-color 0.3s ease;
+  }
+
+  .content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, visibility 0.3s ease, padding 0.3s ease; /* Added padding transition */
+  background-color: white;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+  padding: 10px; /* Adjusted padding */
+  border-radius: 8px;
+  visibility: hidden;
+}
+
+
+.content.show {
+  max-height: 2000px; /* Adjust the value based on your content size */
+  visibility: visible;
+  transition: max-height 0.3s ease-in-out, visibility 0.3s ease, padding 0.3s ease;
+}
+
+
+  .claim-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .claim-form label {
+    margin-bottom: 8px;
+    text-align: left;
+    width: 100%;
+  }
+
+  .claim-form .input-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px; /* Reduced gap */
+  }
+
+  .claim-form input,
+  .claim-form textarea,
+  .claim-form select,
+  .claim-form button {
+    width: calc(50% - 6px);
+    padding: 8px; /* Reduced padding */
+    margin-bottom: 8px; /* Reduced margin */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    font-size: 14px; /* Reduced font size */
+  }
+
+  .claim-form button {
+    background-color: #800080;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .claim-form button:hover {
+    background-color: #600060;
+  }
+  
+</style>
+
+</head>
+<body>
+  <h1>Claims Submission</h1>
+<!-- Collapsible for "Add a New Claim" -->
+
+
+<!-- Collapsible for "Add a New Claim" -->
+<button class="collapsible" onclick="toggleCollapsible('newClaimCollapsible')">Add a New Claim</button>
+<div id="newClaimCollapsible" class="content">
+  <!-- Your existing claim submission form elements go here -->
+  <div class="claim-form">
+    <div class="input-container">
+      <input type="date" id="claimDate" name="claimDate" required placeholder="Select Date" value="">
+      
+      <select id="severity" name="severity" required>
+        <option value="" disabled selected hidden>Choose Severity</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+      
+      <select id="claimUser" name="claimUser" required>
+        <option value="" selected disabled hidden>Choose User</option>
+      </select>
+      
+      <input type="text" id="jobId" name="jobId" required placeholder="Enter Job ID">
+    </div>
+    
+    <div class="input-container">
+      <textarea id="claimComment" name="claimComment" rows="4" cols="50" required placeholder="Enter Comment"></textarea>
+    </div>
+    
+    <!-- Center the elements within the collapsible -->
+    <div class="input-container" style="text-align: center;">
+      <button type="button" onclick="submitClaim()" style="width: calc(50% - 6px); padding: 8px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); box-sizing: border-box; font-size: 14px;">Submit Claim</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Collapsible for "Claim Search" -->
+<button class="collapsible" onclick="toggleCollapsible('searchClaimCollapsible')">Claim Search</button>
+<div id="searchClaimCollapsible" class="content">
+  <!-- Your existing claim search form elements go here -->
+  <div class="claim-form">
+    <!-- Date inputs side by side -->
+    <div class="input-container" style="display: flex; gap: 10px;">
+      <label for="startDate">Start Date:</label>
+      <input type="date" id="startDate" name="startDate" style="width: 100%; padding: 12px; box-sizing: border-box;">
+    </div>
+
+    <div class="input-container" style="display: flex; gap: 10px;">
+      <label for="endDate">End Date:</label>
+      <input type="date" id="endDate" name="endDate" style="width: 100%; padding: 12px; box-sizing: border-box;">
+    </div>
+
+    <!-- Checkboxes one below the other -->
+    <label for="searchByUser" style="font-size: 16px;">Search by User:</label>
+    <input type="checkbox" id="searchByUser" onchange="toggleUserDropdownForSearch()" style="width: 20px; height: 20px;">
+
+    <div id="userDropdownContainer" style="display:none; margin-left: 20px;">
+      <label for="searchUser">User:</label>
+      <select id="searchUser" name="searchUser" style="width: 100%; padding: 8px; box-sizing: border-box;"></select>
+    </div>
+
+    <label for="searchById" style="font-size: 16px; margin-top: 10px;">Search by ID:</label>
+    <input type="checkbox" id="searchById" onchange="toggleIdInputForSearch()" style="width: 20px; height: 20px;">
+
+    <div id="idInputContainer" style="display:none; margin-left: 20px;">
+      <label for="searchId">ID:</label>
+      <input type="text" id="searchId" name="searchId" style="width: 100%; padding: 8px; box-sizing: border-box;">
+    </div>
+
+    <!-- Big wide button with centered container -->
+    <div class="input-container" style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+      <button type="button" onclick="searchClaims()" style="width: 80%; padding: 18px; font-size: 18px; margin: 0 auto;">Search</button>
+    </div>
+
+    <div id="searchResults"></div>
+  </div>
+</div>
+
+
+  <!-- Button to return to the homepage -->
+  <button onclick="returnToHomepage()">Back to Homepage</button>
+
+  <script>
+// Function to toggle the visibility of a collapsible
+function toggleCollapsible(collapsibleId) {
+  var collapsibleContent = document.getElementById(collapsibleId);
+
+  // Toggle the 'show' class
+  collapsibleContent.classList.toggle('show');
+}
+
+  </script>
+
+  <script>
+// Function to toggle the visibility of the user dropdown in the Claim Search section
+function toggleUserDropdownForSearch() {
+  var searchByUserCheckbox = document.getElementById('searchByUser');
+  var userDropdownContainer = document.getElementById('userDropdownContainer');
+
+  // If the checkbox is checked, show the user dropdown; otherwise, hide it
+  userDropdownContainer.style.display = searchByUserCheckbox.checked ? 'block' : 'none';
+}
+
+// Function to toggle the visibility of the ID input in the Claim Search section
+function toggleIdInputForSearch() {
+  var searchByIdCheckbox = document.getElementById('searchById');
+  var idInputContainer = document.getElementById('idInputContainer');
+
+  // If the checkbox is checked, show the ID input; otherwise, hide it
+  idInputContainer.style.display = searchByIdCheckbox.checked ? 'block' : 'none';
+}
+
+// Function to fetch user names from the server for the Add New Claim section
+async function fetchUserNamesForClaim() {
+  try {
+    const response = await fetch('/usernames');
+    const userNames = await response.json();
+    console.log('Fetched user names for claim:', userNames);
+
+    // Declare claimUserDropdown in the function scope
+    const claimUserDropdown = document.getElementById('claimUser');
+
+    // Populate the dropdown with user names
+    claimUserDropdown.innerHTML = ''; // Clear previous options
+    userNames.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      claimUserDropdown.add(option);
+    });
+  } catch (error) {
+    console.error('Error fetching user names for claim:', error);
+  }
+}
+
+// Fetch user names for claim when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  fetchUserNamesForClaim();
+});
+
+// Function to set initial placeholder values
+function setInitialPlaceholderValues() {
+  // Set placeholder for claimDate input
+  document.getElementById('claimDate').setAttribute('placeholder', 'Select Date');
+
+  // Set placeholder for severity dropdown
+  document.getElementById('severity').selectedIndex = 0;
+
+  // Set placeholder for claimUser dropdown
+  document.getElementById('claimUser').selectedIndex = 0;
+
+  // Set placeholder for jobId input
+  document.getElementById('jobId').setAttribute('placeholder', 'Enter Job ID');
+}
+// Function to fetch user names from the server for the Claim Search section
+async function fetchUserNamesForSearch() {
+  try {
+    const response = await fetch('/usernames');
+    const userNames = await response.json();
+    console.log('Fetched user names for search:', userNames);
+
+    // Declare searchUserDropdown in the function scope
+    const searchUserDropdown = document.getElementById('searchUser');
+
+    // Populate the dropdown with user names
+    searchUserDropdown.innerHTML = ''; // Clear previous options
+    userNames.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      searchUserDropdown.add(option);
+    });
+  } catch (error) {
+    console.error('Error fetching user names for search:', error);
+  }
+}
+
+// Fetch user names for search when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  fetchUserNamesForSearch();
+  toggleUserDropdownForSearch(); // Ensure the initial state matches the checkbox state
+});
+    // Function to submit a claim
+    function submitClaim() {
+      const claimDate = document.getElementById('claimDate').value;
+      const claimUser = document.getElementById('claimUser').value;
+      const jobId = document.getElementById('jobId').value;
+      const claimComment = document.getElementById('claimComment').value;
+      const severity = document.getElementById('severity').value;
+
+      console.log('Submitting claim...');
+
+      // Inside the submitClaim function
+      fetch('/submitClaim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ claimDate, claimUser, jobId, claimComment, severity }),
+      })
+      .then(response => {
+        // Log the response status and headers
+        console.log('Response Status:', response.status);
+        console.log('Response Headers:', response.headers);
+
+        // Check if the response status is OK before attempting to parse JSON
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+
+        // Return the response text (not parsed as JSON yet)
+        return response.text();
+      })
+      .then(responseText => {
+        // Log the response text before parsing as JSON
+        console.log('Response Text:', responseText);
+
+        // Attempt to parse the response text as JSON
+        const data = JSON.parse(responseText);
+
+        console.log('Claim submitted successfully:', data);
+        alert('Claim submitted successfully!');
+        document.getElementById('claimsForm').reset();
+      })
+      .catch(error => console.error('Error submitting claim:', error));
+    }
+
+    function searchClaims() {
+  const searchByUserCheckbox = document.getElementById('searchByUser');
+  const searchByIdCheckbox = document.getElementById('searchById');
+  const searchUserDropdown = document.getElementById('searchUser');
+  const searchIdInput = document.getElementById('searchId');
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  console.log('Search button pressed.');
+  console.log('Search by User:', searchByUserCheckbox.checked);
+  console.log('Search User:', searchByUserCheckbox.checked ? searchUserDropdown.value : 'All Users');
+  console.log('Search by ID:', searchByIdCheckbox.checked);
+  console.log('Search ID:', searchByIdCheckbox.checked ? searchIdInput.value : 'All IDs');
+  console.log('Start Date:', startDate);
+  console.log('End Date:', endDate);
+  console.log('Searching claims...');
+
+  // Define the search criteria object
+  const searchCriteria = {};
+
+  // Include user-specific criteria only if "Search by User" is checked
+  if (searchByUserCheckbox.checked) {
+    searchCriteria.searchUser = searchUserDropdown.value;
+  }
+
+  // Include ID-specific criteria only if "Search by ID" is checked
+  if (searchByIdCheckbox.checked) {
+    searchCriteria.searchById = true;
+    searchCriteria.searchId = searchIdInput.value;
+  }
+
+  // Include date range criteria
+  searchCriteria.startDate = startDate;
+  searchCriteria.endDate = endDate;
+
+  // Send a request to the server with the search criteria
+  fetch('/searchClaims', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(searchCriteria),
+  })
+    .then(response => response.json())
+    .then(claims => {
+      console.log('Search results:', claims);
+
+      // Update the DOM to display search results in a table
+      const resultsContainer = document.getElementById('searchResults');
+      resultsContainer.innerHTML = ''; // Clear previous results
+
+      // Create a table
+      const table = document.createElement('table');
+      table.classList.add('result-table');
+
+      // Create table headers
+      const headerRow = document.createElement('tr');
+      headerRow.innerHTML = `
+        <th>User</th>
+        <th>Date</th>
+        <th>Job ID</th>
+        <th>Comment</th>
+      `;
+      table.appendChild(headerRow);
+
+      // Add rows for each claim in the search results
+      claims.forEach(claim => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${claim.claimUser}</td>
+          <td>${claim.claimDate}</td>
+          <td>${claim.jobId}</td>
+          <td>${claim.claimComment}</td>
+        `;
+        table.appendChild(row);
+      });
+
+      // Append the table to the results container
+      resultsContainer.appendChild(table);
+    })
+    .catch(error => console.error('Error searching claims:', error));
+}
+
+
+    // Function to return to the homepage
+    function returnToHomepage() {
+      // Assuming your homepage is at the root URL
+      window.location.href = '/';
+    }
+  </script>
+  
+</body>
+</html>

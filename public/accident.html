@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accident Tracking Page</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+    .collapsible {
+        background-color: #800080; /* Purple color */
+        color: white;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+    }
+
+    .content {
+        display: flex;
+        /* Set display to flex */
+        flex-direction: column;
+        /* Arrange child elements vertically */
+        padding: 0 18px;
+        overflow: hidden;
+        background-color: #f1f1f1;
+        max-height: 0;
+        /* Add this line to hide content by default */
+        transition: max-height 0.2s ease-out;
+        /* Add smooth transition effect */
+    }
+
+    /* Add this style block for the results table */
+    #accidentTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    #accidentTable th, #accidentTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    #accidentTable th {
+        background-color: #6a0dad; /* Darker purple for header */
+        color: white;
+    }
+    </style>
+
+<script>
+    function applyFilters() {
+  const sortOrder = document.getElementById('sortOrder').value;
+
+  fetch(`/searchAccidents?${buildSearchParams()}`)
+    .then(response => response.json())
+    .then(accidents => {
+      console.log('Filtered results:', accidents);
+
+      // Sort the results based on sortOrder
+      accidents = sortAccidents(accidents, sortOrder);
+
+      const tableBody = document.getElementById('accidentTableBody');
+      tableBody.innerHTML = '';
+
+      accidents.forEach(accident => {
+        const row = tableBody.insertRow();
+        row.insertCell().innerText = accident.truckNumber;
+        row.insertCell().innerText = accident.driver;
+        row.insertCell().innerText = new Date(accident.accidentDate).toISOString().split('T')[0];
+        row.insertCell().innerText = accident.accidentComment;
+      });
+    })
+    .catch(error => console.error('Error applying filters:', error));
+}
+
+// Function to sort accidents based on sortOrder
+function sortAccidents(accidents, sortOrder) {
+  if (sortOrder === 'newestToOldest') {
+    return accidents.sort((a, b) => new Date(b.accidentDate) - new Date(a.accidentDate));
+  } else if (sortOrder === 'oldestToNewest') {
+    return accidents.sort((a, b) => new Date(a.accidentDate) - new Date(b.accidentDate));
+  } else if (sortOrder === 'byDriver') {
+    return accidents.sort((a, b) => a.driver.localeCompare(b.driver));
+  } else if (sortOrder === 'byTruckNumber') {
+    return accidents.sort((a, b) => a.truckNumber.localeCompare(b.truckNumber));
+  }
+
+  return accidents; // Return the original array if no valid sortOrder is provided
+}
+
+</script>
+
+</head>
+
+<body>
+    <h1>Accident Tracking Page</h1>
+
+    <!-- Collapsible for Reporting Accidents -->
+    <button class="collapsible" id="toggleReportAccident">Report an Accident</button>
+    <div class="content" id="reportAccidentCollapsible">
+        <form action="/submitAccident" method="post" onsubmit="event.preventDefault(); submitAccident();">
+            <!-- Dropdown Box to Pick Truck number -->
+            <label for="truckNumber">Truck Number:</label>
+            <select id="truckNumber" name="truckNumber" required></select>
+            <br>
+
+            <!-- Driver Dropdown Box (populated from users) -->
+            <label for="driver">Driver:</label>
+            <select id="driver" name="driver" required></select>
+            <br>
+
+            <!-- Date Picker -->
+            <label for="accidentDate">Date:</label>
+            <input type="date" id="accidentDate" name="accidentDate" required>
+            <br>
+
+            <!-- Comment Box -->
+            <label for="accidentComment">Comment:</label>
+            <textarea id="accidentComment" name="accidentComment" rows="4" cols="50"></textarea>
+            <br>
+
+            <button type="submit">Submit Accident</button>
+        </form>
+
+        <!-- Display success or error messages -->
+        <div id="accidentMessage"></div>
+    </div>
+
+<!-- Collapsible for Searching Accidents -->
+<button class="collapsible" id="toggleSearchAccidents">Search Accidents</button>
+<div class="content" id="searchAccidentsCollapsible">
+    <form onsubmit="event.preventDefault(); searchAccidents();">
+        <label>
+            <input type="checkbox" id="searchByDriver" name="searchByDriver"> Search by Driver
+        </label>
+        <div id="driverDropdownContainer" style="display: none;">
+            <label for="searchDriver">Driver:</label>
+            <select id="searchDriver" name="searchDriver"></select>
+        </div>
+        <br>
+
+        <label>
+            <input type="checkbox" id="searchByTruck" name="searchByTruck"> Search by Truck
+        </label>
+        <div id="truckDropdownContainer" style="display: none;">
+            <label for="searchTruckNumber">Truck Number:</label>
+            <select id="searchTruckNumber" name="searchTruckNumber"></select>
+        </div>
+        <br>
+
+        <label for="searchStartDate">Start Date:</label>
+        <input type="date" id="searchStartDate" name="searchStartDate">
+        <label for="searchEndDate">End Date:</label>
+        <input type="date" id="searchEndDate" name="searchEndDate">
+        <button type="submit">Search Accidents</button>
+    </form>
+    <div id="filterControls">
+        <label for="sortOrder">Sort Order:</label>
+        <select id="sortOrder">
+            <option value="newestToOldest">From Newest to Oldest</option>
+            <option value="oldestToNewest">From Oldest to Newest</option>
+            <option value="byDriver">By Driver</option>
+            <option value="byTruckNumber">By Truck Number</option>
+        </select>
+
+        <button onclick="applyFilters()">Apply Filters</button>
+    </div>
+    
+  <!-- Display search results in a table -->
+  <table id="accidentTable">
+    <thead>
+        <tr>
+            <th>Truck Number</th>
+            <th>Driver</th>
+            <th>Accident Date</th>
+            <th>Accident Comment</th>
+        </tr>
+    </thead>
+    <tbody id="accidentTableBody"></tbody>
+</table>
+</div>
+
+    <button onclick="redirectToIndex()">Back to HomePage</button>
+
+
+
+    <script>
+  // Function to toggle the visibility of a collapsible
+  function toggleCollapsible(collapsibleId) {
+        var collapsible = document.getElementById(collapsibleId);
+        collapsible.style.maxHeight = (collapsible.style.maxHeight === '0px' || collapsible.style.maxHeight === '') ? 'fit-content' : '0px';
+    }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reportAccidentCollapsible = document.getElementById('reportAccidentCollapsible');
+            const searchAccidentsCollapsible = document.getElementById('searchAccidentsCollapsible');
+
+            document.getElementById('toggleReportAccident').addEventListener('click', () => {
+                toggleCollapsible('reportAccidentCollapsible');
+            });
+
+            document.getElementById('toggleSearchAccidents').addEventListener('click', () => {
+                toggleCollapsible('searchAccidentsCollapsible');
+            });
+
+            const truckDropdown = document.getElementById('truckNumber');
+            const driverDropdown = document.getElementById('driver');
+
+
+            const searchByDriverCheckbox = document.getElementById('searchByDriver');
+    const driverDropdownContainer = document.getElementById('driverDropdownContainer');
+
+    const searchByTruckCheckbox = document.getElementById('searchByTruck');
+    const truckDropdownContainer = document.getElementById('truckDropdownContainer');
+
+
+            const searchTruckDropdown = document.getElementById('searchTruckNumber');
+            const searchDriverDropdown = document.getElementById('searchDriver');
+
+            
+
+    // Show/hide driver dropdown based on checkbox
+    searchByDriverCheckbox.addEventListener('change', () => {
+        driverDropdownContainer.style.display = searchByDriverCheckbox.checked ? 'block' : 'none';
+    });
+
+    // Show/hide truck dropdown based on checkbox
+    searchByTruckCheckbox.addEventListener('change', () => {
+        truckDropdownContainer.style.display = searchByTruckCheckbox.checked ? 'block' : 'none';
+    });
+
+
+            fetch('/truckNumbers')
+                .then(response => response.json())
+                .then(truckNumbers => {
+                    truckNumbers.forEach(number => {
+                        const option = document.createElement('option');
+                        option.value = number;
+                        option.text = number;
+                        truckDropdown.add(option);
+
+                        const searchOption = document.createElement('option');
+                        searchOption.value = number;
+                        searchOption.text = number;
+                        searchTruckDropdown.add(searchOption);
+                    });
+                })
+                .catch(error => console.error('Error fetching truck numbers:', error));
+
+            fetch('/usernames')
+                .then(response => response.json())
+                .then(usernames => {
+                    usernames.forEach(username => {
+                        const option = document.createElement('option');
+                        option.value = username;
+                        option.text = username;
+                        driverDropdown.add(option);
+
+                        const searchOption = document.createElement('option');
+                        searchOption.value = username;
+                        searchOption.text = username;
+                        searchDriverDropdown.add(searchOption);
+                    });
+                })
+                .catch(error => console.error('Error fetching usernames:', error));
+        });
+
+        function submitAccident() {
+            const truckNumber = document.getElementById('truckNumber').value;
+            const driver = document.getElementById('driver').value;
+            const accidentDate = document.getElementById('accidentDate').value;
+            const accidentComment = document.getElementById('accidentComment').value;
+
+            fetch('/submitAccident', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `truckNumber=${encodeURIComponent(truckNumber)}&driver=${encodeURIComponent(driver)}&accidentDate=${encodeURIComponent(accidentDate)}&accidentComment=${encodeURIComponent(accidentComment)}`,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server response:', data);
+                    document.getElementById('accidentMessage').innerText = data.message;
+                    document.getElementById('truckNumber').value = '';
+                    document.getElementById('driver').value = '';
+                    document.getElementById('accidentDate').value = '';
+                    document.getElementById('accidentComment').value = '';
+                })
+                .catch(error => console.error('Error submitting accident:', error));
+        }
+
+        function searchAccidents() {
+    const searchByDriver = document.getElementById('searchByDriver').checked;
+    const searchByTruck = document.getElementById('searchByTruck').checked;
+    const searchDriver = document.getElementById('searchDriver').value;
+    const searchTruckNumber = document.getElementById('searchTruckNumber').value;
+    const searchStartDate = document.getElementById('searchStartDate').value;
+    const searchEndDate = document.getElementById('searchEndDate').value;
+
+    let searchParams = '';
+
+    if (searchByDriver) {
+        searchParams += `driver=${encodeURIComponent(searchDriver)}&`;
+    }
+
+    if (searchByTruck) {
+        searchParams += `truckNumber=${encodeURIComponent(searchTruckNumber)}&`;
+    }
+
+ // Add date range to search params
+ if (searchStartDate) {
+        searchParams += `startDate=${encodeURIComponent(searchStartDate)}&`;
+    }
+    if (searchEndDate) {
+        // Extend the end date to cover the entire day
+        const endDate = new Date(searchEndDate);
+        endDate.setHours(23, 59, 59, 999); // Set milliseconds to the end of the day
+        const endDateString = endDate.toISOString().split('T')[0]; // Convert to YYYY-MM-DD format
+        searchParams += `endDate=${encodeURIComponent(endDateString)}&`;
+    }
+
+    fetch(`/searchAccidents?${searchParams}`)
+        .then(response => response.json())
+        .then(accidents => {
+            console.log('Search results:', accidents);
+            const tableBody = document.getElementById('accidentTableBody');
+            tableBody.innerHTML = '';
+
+            accidents.forEach(accident => {
+                const row = tableBody.insertRow();
+                row.insertCell().innerText = accident.truckNumber;
+                row.insertCell().innerText = accident.driver;
+                row.insertCell().innerText = new Date(accident.accidentDate).toISOString().split('T')[0];
+                row.insertCell().innerText = accident.accidentComment;
+            });
+        })
+        .catch(error => console.error('Error searching accidents:', error));
+}
+
+        function redirectToIndex() {
+            window.location.href = 'index.html';
+        }
+
+        function buildSearchParams() {
+  const searchByDriver = document.getElementById('searchByDriver').checked;
+  const searchByTruck = document.getElementById('searchByTruck').checked;
+  const searchDriver = document.getElementById('searchDriver').value;
+  const searchTruckNumber = document.getElementById('searchTruckNumber').value;
+  const searchStartDate = document.getElementById('searchStartDate').value;
+  const searchEndDate = document.getElementById('searchEndDate').value;
+
+  let searchParams = '';
+
+  if (searchByDriver) {
+    searchParams += `searchByDriver=true&searchDriver=${encodeURIComponent(searchDriver)}&`;
+  }
+
+  if (searchByTruck) {
+    searchParams += `searchByTruck=true&searchTruckNumber=${encodeURIComponent(searchTruckNumber)}&`;
+  }
+
+  if (searchStartDate) {
+    searchParams += `searchStartDate=${encodeURIComponent(searchStartDate)}&`;
+  }
+
+  if (searchEndDate) {
+    searchParams += `searchEndDate=${encodeURIComponent(searchEndDate)}&`;
+  }
+
+  return searchParams;
+}
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,82 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #a6a3a9;
+  color: #000000;
+  margin: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+/* Style for the form */
+form {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+label, input, textarea {
+  display: block;
+  margin-bottom: 10px;
+}
+
+button {
+  background-color: #800080; /* Purple color */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Style for the ratings rows */
+.rating-row {
+  display: flex;
+}
+
+/* Alternating background colors for rating rows */
+.rating-row:nth-child(odd) {
+  background-color: #D8BFD8; /* Lavender color */
+}
+
+.rating-row:nth-child(even) {
+  background-color: #E6E6FA; /* Lavender blush color */
+}
+
+.column {
+  flex: 1;
+  text-align: center;
+}
+
+/* Style for the ratings summary section */
+#ratingsSummary {
+  margin-top: 20px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Style for the total and average ratings */
+#ratingsSummary p {
+  margin: 0;
+}
+
+#averageRating {
+  font-weight: bold;
+}
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.result-table th, .result-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.result-table th {
+  background-color: #f2f2f2;
+}

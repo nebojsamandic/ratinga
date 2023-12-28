@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registry Page</title>
+    <link rel="stylesheet" type="text/css" href="stylereg.css">
+
+    <style>
+        .collapsible {
+            background-color: purple;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .content {
+            display: none;
+            padding: 0 18px;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+
+        .autocomplete {
+            position: relative;
+            display: inline-block;
+            width: 300px;
+        }
+
+        .autocomplete input {
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .autocomplete .dropdown {
+            position: absolute;
+            width: calc(100% - 2px); /* Adjusted width to match the border size */
+            box-sizing: border-box;
+            z-index: 1;
+            border: 1px solid #ccc;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            border-top: none; /* Hide the top border */
+        }
+
+        .autocomplete .dropdown a {
+            padding: 10px;
+            display: block;
+            text-decoration: none;
+            color: black;
+            cursor: pointer;
+            border-bottom: 1px solid #ccc; /* Add border between items */
+        }
+
+        .autocomplete .dropdown a:last-child {
+            border-bottom: none; /* Remove border for the last item */
+        }
+
+        .autocomplete .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .autocomplete.active .dropdown {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Registry Page</h1>
+
+ <!-- Collapsible for "Add Users" -->
+ <button class="collapsible" onclick="toggleCollapsible('addUsersCollapsible')">Remove and Add Users</button>
+ <div id="addUsersCollapsible" class="content">
+     <form id="userForm" autocomplete="off">
+         <div class="autocomplete">
+             <input id="myInput" type="text" name="myUser" placeholder="User" list="userList" oninput="updateUserSuggestions()">
+             <datalist id="userList"></datalist>
+         </div>
+         <input type="button" value="Submit" onclick="submitUserForm()">
+     </form>
+ </div>
+
+ <!-- Button to return to the index page -->
+ <button onclick="returnToIndex()">Back to HomePage</button>
+
+ <script>
+     function toggleCollapsible(collapsibleId) {
+         var collapsible = document.getElementById(collapsibleId);
+         collapsible.style.display = (collapsible.style.display === 'block') ? 'none' : 'block';
+     }
+
+        async function submitUserForm() {
+            const input = document.getElementById('myInput');
+            const inputValue = input.value.trim();
+
+            if (inputValue === '') {
+                alert('Please enter a username.');
+                return;
+            }
+
+            try {
+                // Check if the user already exists
+                const userExists = await checkUserExists(inputValue);
+
+                if (userExists) {
+                    // If the user exists, send a request to delete the user
+                    const deleteResponse = await deleteUserFromDatabase(inputValue);
+
+                    if (deleteResponse.ok) {
+                        alert('User deleted successfully.');
+                    } else {
+                        alert('An error occurred while deleting the user.');
+                    }
+                } else {
+                    // If the user doesn't exist, send a request to add the user
+                    const addResponse = await addUserToDatabase(inputValue);
+
+                    if (addResponse.ok) {
+                        alert('User added successfully.');
+                    } else {
+                        alert('An error occurred while adding the user.');
+                    }
+                }
+
+                // Clear the input field after processing
+                input.value = '';
+
+                // Refresh user suggestions after adding/deleting a user
+                updateUserSuggestions();
+            } catch (error) {
+                console.error('Error processing user:', error);
+                alert('An error occurred while processing the user.');
+            }
+        }
+
+        async function checkUserExists(username) {
+            // Send a request to check if the user exists in the database
+            const response = await fetch(`/userExists?username=${username}`);
+            const data = await response.json();
+            return data.exists;
+        }
+
+        async function addUserToDatabase(username) {
+            // Send a request to add the user to the database
+            const response = await fetch('/addUser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            });
+
+            return response;
+        }
+
+        async function deleteUserFromDatabase(username) {
+            // Send a request to delete the user from the database
+            const response = await fetch('/deleteUser', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            });
+
+            return response;
+        }
+
+        function updateUserSuggestions() {
+            const input = document.getElementById('myInput');
+            const inputValue = input.value;
+
+            // Fetch the list of users for the datalist
+            fetch(`/usernames?query=${inputValue}`)
+                .then(response => response.json())
+                .then(users => {
+                    const userListDatalist = document.getElementById('userList');
+                    userListDatalist.innerHTML = '';
+
+                    users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user;
+                        userListDatalist.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching user suggestions:', error));
+        }
+
+        function returnToIndex() {
+            // Replace 'index.html' with the actual URL of your index page
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
